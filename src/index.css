@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #09090b;
+    color: #d4d4d8;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
+  }
+
+  /* Base input styling removal */
+  input, textarea, select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Light Theme Overrides */
+html.light,
+body.light,
+.light {
+  background-color: #fbfaf8 !important;
+  color: #27272a !important;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+}
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* Background mappings */
+.light .bg-\[\#09090b\] {
+  background-color: #fbfaf8 !important;
+}
+.light .bg-\[\#0c0c0e\] {
+  background-color: #ffffff !important;
+}
+.light .bg-\[\#0c0c0e\]\/80,
+.light .bg-\[\#0c0c0e\]\/90,
+.light .bg-\[\#0c0c0e\]\/95,
+.light .bg-\[\#0c0c0e\]\/60 {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+.light .bg-\[\#111114\] {
+  background-color: #f5f2eb !important;
+}
+.light .bg-zinc-950 {
+  background-color: #f5f2eb !important;
+}
+.light .bg-zinc-900 {
+  background-color: #eae6dd !important;
+}
+.light .bg-zinc-900\/50,
+.light .bg-zinc-900\/80 {
+  background-color: rgba(245, 242, 235, 0.8) !important;
+}
+
+/* Header & navigation in light mode */
+.light header {
+  background-color: rgba(251, 250, 248, 0.92) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+.light header nav a {
+  color: #4b5563 !important;
+}
+.light header nav a:hover {
+  color: #a87932 !important;
+}
+.light header .border-r {
+  border-right-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Text color mappings */
+.light .text-white {
+  color: #18181b !important;
+}
+.light .text-zinc-100 {
+  color: #18181b !important;
+}
+.light .text-zinc-200 {
+  color: #27272a !important;
+}
+.light .text-zinc-300 {
+  color: #3f3f46 !important;
+}
+.light .text-zinc-400 {
+  color: #52525b !important;
+}
+.light .text-zinc-500 {
+  color: #71717a !important;
+}
+.light .text-\[\#d8b485\] {
+  color: #a87932 !important;
+}
+
+/* Border mappings */
+.light .border-white\/5,
+.light .border-white\/10,
+.light .border-white\/15,
+.light .border-white\/20,
+.light .border-zinc-800,
+.light .border-zinc-700 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light .border-\[\#d8b485\]\/30,
+.light .border-\[\#d8b485\]\/40,
+.light .border-\[\#d8b485\]\/50 {
+  border-color: rgba(168, 121, 50, 0.35) !important;
+}
+
+/* Button & interactive states */
+.light .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+.light .bg-white\/5:hover,
+.light .bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+.light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.light .bg-\[\#d8b485\] {
+  background-color: #a87932 !important;
+  color: #ffffff !important;
+}
+.light .bg-\[\#d8b485\]:hover {
+  background-color: #8f6323 !important;
+  color: #ffffff !important;
+}
+.light .text-zinc-950 {
+  color: #ffffff !important;
+}
+
+/* Inputs, selects, and textareas */
+.light input,
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: #a87932 !important;
+  box-shadow: 0 0 0 1px #a87932 !important;
+}
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #a1a1aa !important;
+}
+
+/* Hero gradient adjustment for light mode */
+.light .hero-bg-gradient-r {
+  background: linear-gradient(to right, rgba(251,250,248,0.96) 0%, rgba(251,250,248,0.85) 55%, rgba(251,250,248,0.3) 100%) !important;
+}
+.light .hero-bg-gradient-t {
+  background: linear-gradient(to top, #fbfaf8 0%, transparent 60%, rgba(251,250,248,0.7) 100%) !important;
+}
+
+@keyframes auraFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aura-reveal {
+  opacity: 0;
+}
+
+.aura-reveal.aura-visible {
+  animation: auraFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+a, button {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+a.inline-flex:hover, button.inline-flex:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(216, 180, 133, 0.25);
+}
+
+a.inline-flex:active, button.inline-flex:active {
+  transform: translateY(0);
+}

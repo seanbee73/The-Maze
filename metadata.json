@@ -1,0 +1,6 @@
+{
+  "name": "The Maze Hair Salon | Premier Hair & Styling Salon in North York, Toronto",
+  "description": "The Maze Hair Salon in North York, Toronto. Expert balayage, precision cuts, digital perms, Japanese/Korean styling, hair coloring, and treatments since 2016.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
