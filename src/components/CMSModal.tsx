@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { HairService, PortfolioItem } from '../types';
+import React, { useState, useEffect } from 'react';
+import { BookingInquiry, HairService, PortfolioItem } from '../types';
+import { BookingRequestsManager } from './BookingRequestsManager';
 
 interface CMSModalProps {
   isOpen: boolean;
@@ -9,6 +10,12 @@ interface CMSModalProps {
   services: HairService[];
   onUpdateServices: (services: HairService[]) => void;
   onResetDefaults: () => void;
+  bookings: BookingInquiry[];
+  onUpdateBookingStatus: (id: string, status: 'pending' | 'confirmed' | 'completed' | 'cancelled') => void;
+  onDeleteBooking: (id: string) => void;
+  onAddManualBooking: (booking: BookingInquiry) => void;
+  onClearAllBookings?: () => void;
+  initialTab?: 'bookings' | 'portfolio' | 'services' | 'backup';
 }
 
 export const CMSModal: React.FC<CMSModalProps> = ({
@@ -19,10 +26,91 @@ export const CMSModal: React.FC<CMSModalProps> = ({
   services,
   onUpdateServices,
   onResetDefaults,
+  bookings,
+  onUpdateBookingStatus,
+  onDeleteBooking,
+  onAddManualBooking,
+  onClearAllBookings,
+  initialTab = 'bookings',
 }) => {
-  const [activeTab, setActiveTab] = useState<'portfolio' | 'services' | 'backup'>('portfolio');
+  // Admin Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return (
+        localStorage.getItem('the_maze_admin_auth') === 'true' ||
+        sessionStorage.getItem('the_maze_admin_auth') === 'true'
+      );
+    } catch {
+      return false;
+    }
+  });
+
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<'bookings' | 'portfolio' | 'services' | 'backup'>(initialTab);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setIsLoggingIn(true);
+
+    const user = usernameInput.trim().toLowerCase();
+    const pass = passwordInput.trim();
+
+    // Valid credentials:
+    // Usernames: 'admin', 'admin@themaze.ca', 'manager'
+    // Passwords: 'themaze2026', 'maze5233', '5233', 'admin'
+    const validUsernames = ['admin', 'admin@themaze.ca', 'manager', 'themaze'];
+    const validPasswords = ['themaze2026', 'maze5233', '5233', 'admin'];
+
+    setTimeout(() => {
+      setIsLoggingIn(false);
+      if (validUsernames.includes(user) && validPasswords.includes(pass)) {
+        setIsAuthenticated(true);
+        try {
+          if (rememberMe) {
+            localStorage.setItem('the_maze_admin_auth', 'true');
+          } else {
+            sessionStorage.setItem('the_maze_admin_auth', 'true');
+          }
+        } catch {
+          // ignore
+        }
+      } else {
+        setLoginError('Invalid admin credentials. Please check your username and password.');
+      }
+    }, 400);
+  };
+
+  const handleAdminLogout = () => {
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem('the_maze_admin_auth');
+      sessionStorage.removeItem('the_maze_admin_auth');
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleQuickFillDemo = () => {
+    setUsernameInput('admin');
+    setPasswordInput('themaze2026');
+    setLoginError(null);
+  };
+
+  const pendingBookingsCount = bookings.filter((b) => (b.status || 'pending') === 'pending').length;
 
   // Form State for Portfolio Item
   const [portfolioForm, setPortfolioForm] = useState<Partial<PortfolioItem>>({
@@ -201,37 +289,195 @@ export const CMSModal: React.FC<CMSModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-[#0c0c0e] border border-white/10 shadow-2xl my-auto text-left flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#09090b]">
-          <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#d8b485] animate-pulse"></div>
-            <div>
-              <h2 className="text-sm font-bold tracking-widest text-white uppercase">
-                The Maze Salon CMS Manager
-              </h2>
-              <p className="text-[10px] text-zinc-500">
-                Update hair portfolio, prices, services and descriptions instantly
+      {/* If Not Authenticated: Show Secure Admin Login Dialog */}
+      {!isAuthenticated ? (
+        <div className="relative w-full max-w-md bg-[#0c0c0e] border border-[#d8b485]/40 shadow-2xl my-auto text-left overflow-hidden">
+          {/* Top Gold Accent Bar */}
+          <div className="h-1 bg-gradient-to-r from-[#d8b485] via-amber-200 to-[#d8b485]"></div>
+
+          {/* Modal Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#09090b]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded bg-[#d8b485]/10 border border-[#d8b485]/30 flex items-center justify-center text-[#d8b485]">
+                <iconify-icon icon="solar:shield-keyhole-bold" style={{ fontSize: '16px' }}></iconify-icon>
+              </div>
+              <div>
+                <h2 className="text-xs font-bold tracking-widest text-white uppercase">
+                  The Maze • Admin Portal
+                </h2>
+                <p className="text-[10px] text-zinc-500">Staff &amp; Salon Management Access</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-zinc-400 hover:text-white p-1 transition-colors"
+              aria-label="Close"
+            >
+              <iconify-icon icon="solar:close-circle-linear" style={{ fontSize: '20px' }}></iconify-icon>
+            </button>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleAdminLogin} className="p-6 space-y-4">
+            <div className="text-left">
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Enter your administrative credentials to manage client booking requests, hair portfolio transformations, and salon service prices.
               </p>
             </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-white p-1 transition-colors"
-            aria-label="Close CMS"
-          >
-            <iconify-icon icon="solar:close-circle-linear" style={{ fontSize: '24px' }}></iconify-icon>
-          </button>
+
+            {loginError && (
+              <div className="p-3 bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs rounded flex items-center gap-2">
+                <iconify-icon icon="solar:danger-triangle-bold" style={{ fontSize: '16px' }}></iconify-icon>
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                Username / Email
+              </label>
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={(e) => setUsernameInput(e.target.value)}
+                placeholder="e.g. admin or admin@themaze.ca"
+                required
+                className="w-full bg-[#09090b] border border-white/10 focus:border-[#d8b485] px-3.5 py-2.5 text-xs text-white outline-none rounded transition-colors"
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                Password
+              </label>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="••••••••••••"
+                required
+                className="w-full bg-[#09090b] border border-white/10 focus:border-[#d8b485] px-3.5 py-2.5 text-xs text-white outline-none rounded transition-colors"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-zinc-400 pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-[11px]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded bg-zinc-900 border-white/20 text-[#d8b485] focus:ring-0"
+                />
+                <span>Remember this device</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={handleQuickFillDemo}
+                className="text-[11px] text-[#d8b485] hover:underline font-mono"
+              >
+                Auto-fill Demo
+              </button>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full py-3 bg-[#d8b485] hover:bg-[#c2a277] text-zinc-950 text-xs font-bold uppercase tracking-widest transition-all rounded shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <iconify-icon icon="solar:spinner-linear" class="animate-spin text-sm"></iconify-icon>
+                    <span>Verifying Access...</span>
+                  </>
+                ) : (
+                  <>
+                    <iconify-icon icon="solar:lock-unlocked-bold" style={{ fontSize: '15px' }}></iconify-icon>
+                    <span>Access Admin Portal</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Quick Helper Note for the Owner */}
+            <div className="p-3 bg-white/5 border border-white/5 rounded text-[11px] text-zinc-400 font-mono space-y-1">
+              <p className="text-zinc-300 font-bold text-[10px] uppercase tracking-wider">Default Admin Credentials:</p>
+              <p>👤 <span className="text-zinc-200">Username:</span> <code className="text-[#d8b485]">admin</code></p>
+              <p>🔑 <span className="text-zinc-200">Password:</span> <code className="text-[#d8b485]">themaze2026</code></p>
+            </div>
+          </form>
         </div>
+      ) : (
+        <div className="relative w-full max-w-5xl bg-[#0c0c0e] border border-white/10 shadow-2xl my-auto text-left flex flex-col max-h-[90vh]">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#09090b]">
+            <div className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold tracking-widest text-white uppercase">
+                    The Maze Salon Admin Portal
+                  </h2>
+                  <span className="px-2 py-0.5 bg-[#d8b485]/10 border border-[#d8b485]/30 text-[#d8b485] text-[9px] font-mono font-bold rounded">
+                    Staff Authenticated
+                  </span>
+                </div>
+                <p className="text-[10px] text-zinc-500">
+                  5233 Yonge St • Manage bookings, portfolio transformations and pricing
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleAdminLogout}
+                className="px-2.5 py-1 text-[10px] font-bold tracking-wider text-zinc-400 hover:text-rose-400 border border-white/10 hover:border-rose-500/30 rounded uppercase transition-colors flex items-center gap-1"
+                title="Log out of Admin Portal"
+              >
+                <iconify-icon icon="solar:logout-linear" style={{ fontSize: '13px' }}></iconify-icon>
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="text-zinc-400 hover:text-white p-1 transition-colors"
+                aria-label="Close Admin Portal"
+              >
+                <iconify-icon icon="solar:close-circle-linear" style={{ fontSize: '24px' }}></iconify-icon>
+              </button>
+            </div>
+          </div>
 
         {/* Tabs */}
-        <div className="flex items-center border-b border-white/10 bg-[#09090b]/50 px-6 gap-6 text-xs uppercase font-bold tracking-widest">
+        <div className="flex items-center border-b border-white/10 bg-[#09090b]/50 px-6 gap-6 text-xs uppercase font-bold tracking-widest overflow-x-auto">
+          <button
+            onClick={() => {
+              setActiveTab('bookings');
+              setEditingItemId(null);
+              setEditingServiceId(null);
+            }}
+            className={`py-3.5 border-b-2 transition-colors flex items-center gap-2 shrink-0 ${
+              activeTab === 'bookings'
+                ? 'border-[#d8b485] text-[#d8b485]'
+                : 'border-transparent text-zinc-400 hover:text-white'
+            }`}
+          >
+            <iconify-icon icon="solar:inbox-line-bold" style={{ fontSize: '15px' }}></iconify-icon>
+            <span>Booking Requests ({bookings.length})</span>
+            {pendingBookingsCount > 0 && (
+              <span className="px-1.5 py-0.2 bg-amber-400 text-zinc-950 text-[9px] font-extrabold rounded-full animate-pulse">
+                {pendingBookingsCount} New
+              </span>
+            )}
+          </button>
           <button
             onClick={() => {
               setActiveTab('portfolio');
               setEditingItemId(null);
+              setEditingServiceId(null);
             }}
-            className={`py-3.5 border-b-2 transition-colors ${
+            className={`py-3.5 border-b-2 transition-colors shrink-0 ${
               activeTab === 'portfolio'
                 ? 'border-[#d8b485] text-[#d8b485]'
                 : 'border-transparent text-zinc-400 hover:text-white'
@@ -243,8 +489,9 @@ export const CMSModal: React.FC<CMSModalProps> = ({
             onClick={() => {
               setActiveTab('services');
               setEditingServiceId(null);
+              setEditingItemId(null);
             }}
-            className={`py-3.5 border-b-2 transition-colors ${
+            className={`py-3.5 border-b-2 transition-colors shrink-0 ${
               activeTab === 'services'
                 ? 'border-[#d8b485] text-[#d8b485]'
                 : 'border-transparent text-zinc-400 hover:text-white'
@@ -253,8 +500,12 @@ export const CMSModal: React.FC<CMSModalProps> = ({
             Services &amp; Pricing ({services.length})
           </button>
           <button
-            onClick={() => setActiveTab('backup')}
-            className={`py-3.5 border-b-2 transition-colors ${
+            onClick={() => {
+              setActiveTab('backup');
+              setEditingItemId(null);
+              setEditingServiceId(null);
+            }}
+            className={`py-3.5 border-b-2 transition-colors shrink-0 ${
               activeTab === 'backup'
                 ? 'border-[#d8b485] text-[#d8b485]'
                 : 'border-transparent text-zinc-400 hover:text-white'
@@ -266,6 +517,17 @@ export const CMSModal: React.FC<CMSModalProps> = ({
 
         {/* CMS Body */}
         <div className="p-6 overflow-y-auto flex-grow space-y-6">
+          {/* TAB 0: Booking Requests Inbox */}
+          {activeTab === 'bookings' && (
+            <BookingRequestsManager
+              bookings={bookings}
+              onUpdateStatus={onUpdateBookingStatus}
+              onDeleteBooking={onDeleteBooking}
+              onAddManualBooking={onAddManualBooking}
+              onClearAllBookings={onClearAllBookings}
+            />
+          )}
+
           {/* TAB 1: Portfolio Items */}
           {activeTab === 'portfolio' && (
             <div>
@@ -687,6 +949,7 @@ export const CMSModal: React.FC<CMSModalProps> = ({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

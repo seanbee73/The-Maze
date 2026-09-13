@@ -1,4 +1,4 @@
-import { HairService, PortfolioItem, ReviewItem, StylistProfile } from '../types';
+import { BookingInquiry, HairService, PortfolioItem, ReviewItem, StylistProfile } from '../types';
 
 export const SALON_INFO = {
   name: 'The Maze Hair Salon',
@@ -509,5 +509,47 @@ export const REAL_REVIEWS: ReviewItem[] = [
     serviceMentioned: "Men's Haircut & Head Spa",
     content: 'Service is nice. Gives shampoo massage before and after haircut. Clean spot, reasonable price, and very friendly staff.',
     positivePoints: ['Pre & post shampoo massage', 'Clean space', 'Fair pricing'],
+  },
+];
+
+export const INITIAL_BOOKINGS: BookingInquiry[] = [
+  {
+    id: 'MZ-8902',
+    name: 'Emily Zhang',
+    phone: '(416) 555-0192',
+    email: 'emily.zhang@example.com',
+    preferredStylist: 'Jason (Master Stylist & Color Specialist)',
+    serviceCategory: 'Smoky Ash Dimensional Balayage + Gloss',
+    preferredDate: '2026-09-18',
+    preferredTime: '01:00 PM',
+    notes: 'Previously bleached ends about 6 months ago. Want a cool ash balayage blend and Olaplex treatment.',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+  },
+  {
+    id: 'MZ-8901',
+    name: 'Marcus Chen',
+    phone: '(647) 555-8831',
+    email: 'marcus.c@example.com',
+    preferredStylist: 'Rick (Master Stylist & Perm Specialist)',
+    serviceCategory: 'Korean Root Lift & Natural Wave Perm',
+    preferredDate: '2026-09-16',
+    preferredTime: '03:30 PM',
+    notes: 'First time getting a Korean wave perm. Straight hair that goes flat easily.',
+    status: 'confirmed',
+    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+  },
+  {
+    id: 'MZ-8899',
+    name: 'Sophia Laurent',
+    phone: '(416) 555-4720',
+    email: 'sophia.laurent@example.com',
+    preferredStylist: 'Takuma Kiryu (Japanese Technique Senior Stylist)',
+    serviceCategory: "Women's Designer Haircut & Blowout",
+    preferredDate: '2026-09-15',
+    preferredTime: '11:00 AM',
+    notes: 'Looking for French textured layers and soft curtain bangs reshape.',
+    status: 'completed',
+    createdAt: new Date(Date.now() - 1000 * 60 * 1440 * 2).toISOString(),
   },
 ];

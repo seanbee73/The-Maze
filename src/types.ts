@@ -51,6 +51,7 @@ export interface ReviewItem {
 }
 
 export interface BookingInquiry {
+  id?: string;
   name: string;
   phone: string;
   email: string;
@@ -59,5 +60,6 @@ export interface BookingInquiry {
   preferredDate: string;
   preferredTime: string;
   notes: string;
+  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   createdAt?: string;
 }

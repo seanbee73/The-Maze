@@ -5,11 +5,17 @@ import { BookingInquiry } from '../types';
 interface ContactBookingSectionProps {
   preselectedService?: string;
   preselectedStylist?: string;
+  bookingsCount?: number;
+  onNewBooking?: (booking: BookingInquiry) => void;
+  onOpenBookingsInbox?: () => void;
 }
 
 export const ContactBookingSection: React.FC<ContactBookingSectionProps> = ({
   preselectedService,
   preselectedStylist,
+  bookingsCount = 0,
+  onNewBooking,
+  onOpenBookingsInbox,
 }) => {
   const [bookingData, setBookingData] = useState<BookingInquiry>({
     name: '',
@@ -23,7 +29,7 @@ export const ContactBookingSection: React.FC<ContactBookingSectionProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedBooking, setSubmittedBooking] = useState<BookingInquiry | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Sync prop changes
@@ -49,16 +55,19 @@ export const ContactBookingSection: React.FC<ContactBookingSectionProps> = ({
     setErrorMsg(null);
     setIsSubmitting(true);
 
+    const generatedId = `MZ-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newRecord: BookingInquiry = {
+      ...bookingData,
+      id: generatedId,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+
     setTimeout(() => {
       setIsSubmitting(false);
-      setIsSubmitted(true);
-      // Persist in local storage for salon records
-      try {
-        const existing = JSON.parse(localStorage.getItem('the_maze_appointments') || '[]');
-        existing.push({ ...bookingData, createdAt: new Date().toISOString() });
-        localStorage.setItem('the_maze_appointments', JSON.stringify(existing));
-      } catch {
-        // ignore
+      setSubmittedBooking(newRecord);
+      if (onNewBooking) {
+        onNewBooking(newRecord);
       }
     }, 600);
   };
@@ -147,55 +156,89 @@ export const ContactBookingSection: React.FC<ContactBookingSectionProps> = ({
 
         {/* Right Column: Interactive Online Booking Form */}
         <div className="flex-1 lg:max-w-xl w-full">
-          {isSubmitted ? (
+          {submittedBooking ? (
             <div className="bg-[#0c0c0e] p-8 md:p-12 border border-[#d8b485]/30 text-left animate-fadeIn">
-              <div className="w-12 h-12 rounded-full bg-[#d8b485]/10 flex items-center justify-center text-[#d8b485] mb-6">
-                <iconify-icon icon="solar:check-circle-linear" style={{ fontSize: '28px' }}></iconify-icon>
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-12 h-12 rounded-full bg-[#d8b485]/10 flex items-center justify-center text-[#d8b485]">
+                  <iconify-icon icon="solar:check-circle-linear" style={{ fontSize: '28px' }}></iconify-icon>
+                </div>
+                <span className="px-3 py-1 bg-white/5 border border-white/10 text-[#d8b485] font-mono text-xs rounded font-bold">
+                  Reference: #{submittedBooking.id}
+                </span>
               </div>
+
               <h3 className="text-xl font-medium text-white mb-2 uppercase tracking-wide">
-                Booking Request Received
+                Booking Request Recorded
               </h3>
               <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-                Thank you, {bookingData.name}! We have received your appointment request for{' '}
-                <strong className="text-white">{bookingData.serviceCategory}</strong> with{' '}
-                <strong className="text-[#d8b485]">{bookingData.preferredStylist}</strong>. Our front desk team will call or text you at <strong className="text-white">{bookingData.phone}</strong> to confirm your exact chair slot.
+                Thank you, {submittedBooking.name}! We have saved your appointment request for{' '}
+                <strong className="text-white">{submittedBooking.serviceCategory}</strong> with{' '}
+                <strong className="text-[#d8b485]">{submittedBooking.preferredStylist}</strong>. Our front desk team will call or text you at <strong className="text-white">{submittedBooking.phone}</strong> to confirm your chair slot.
               </p>
-              <div className="p-4 bg-[#09090b] border border-white/5 text-xs text-zinc-400 font-mono mb-6">
-                <p>📍 The Maze Hair Salon: 5233 Yonge St, North York</p>
-                <p>📞 Urgent confirmation? Call: (416) 227-1818</p>
+
+              <div className="p-4 bg-[#09090b] border border-white/5 text-xs text-zinc-400 font-mono mb-6 space-y-1">
+                <p>📋 <strong className="text-zinc-200">Status:</strong> 🟡 Pending Front-Desk Confirmation</p>
+                <p>📍 <strong className="text-zinc-200">Studio:</strong> 5233 Yonge St, North York</p>
+                <p>📞 <strong className="text-zinc-200">Front Desk:</strong> (416) 227-1818</p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSubmitted(false);
-                  setBookingData({
-                    name: '',
-                    phone: '',
-                    email: '',
-                    preferredStylist: 'First Available Master Stylist',
-                    serviceCategory: "Women's Designer Haircut & Blowout",
-                    preferredDate: '',
-                    preferredTime: '11:00 AM',
-                    notes: '',
-                  });
-                }}
-                className="px-6 py-3 text-[10px] font-bold tracking-widest text-zinc-950 bg-[#d8b485] hover:bg-[#c2a277] uppercase transition-colors"
-              >
-                Submit Another Request
-              </button>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                {onOpenBookingsInbox && (
+                  <button
+                    type="button"
+                    onClick={onOpenBookingsInbox}
+                    className="flex-1 px-5 py-3 text-[10px] font-bold tracking-widest text-zinc-950 bg-[#d8b485] hover:bg-[#c2a277] uppercase transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <iconify-icon icon="solar:inbox-line-bold" class="text-sm"></iconify-icon>
+                    <span>View in Bookings Inbox</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubmittedBooking(null);
+                    setBookingData({
+                      name: '',
+                      phone: '',
+                      email: '',
+                      preferredStylist: 'First Available Master Stylist',
+                      serviceCategory: "Women's Designer Haircut & Blowout",
+                      preferredDate: '',
+                      preferredTime: '11:00 AM',
+                      notes: '',
+                    });
+                  }}
+                  className="px-5 py-3 text-[10px] font-bold tracking-widest text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 uppercase transition-colors text-center"
+                >
+                  Submit Another
+                </button>
+              </div>
             </div>
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="space-y-6 bg-[#0c0c0e] p-8 md:p-12 border border-white/5 text-left"
+              className="space-y-6 bg-[#0c0c0e] p-8 md:p-12 border border-white/5 text-left relative"
             >
-              <div className="border-b border-white/5 pb-4 mb-2">
-                <h3 className="text-sm font-bold tracking-widest text-white uppercase">
-                  Appointment Request Form
-                </h3>
-                <p className="text-xs text-zinc-500">
-                  Fill in your details and preferred stylist. We will confirm your timing promptly.
-                </p>
+              <div className="border-b border-white/5 pb-4 mb-2 flex items-start justify-between">
+                <div>
+                  <h3 className="text-sm font-bold tracking-widest text-white uppercase">
+                    Appointment Request Form
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Fill in your details and preferred stylist. We will confirm your timing promptly.
+                  </p>
+                </div>
+                {onOpenBookingsInbox && (
+                  <button
+                    type="button"
+                    onClick={onOpenBookingsInbox}
+                    className="text-[9px] font-bold tracking-wider text-[#d8b485] hover:underline uppercase flex items-center gap-1 shrink-0 bg-white/5 px-2.5 py-1.5 rounded border border-white/10"
+                    title="View salon owner / staff booking requests inbox in Admin"
+                  >
+                    <iconify-icon icon="solar:shield-keyhole-bold"></iconify-icon>
+                    <span>Admin ({bookingsCount})</span>
+                  </button>
+                )}
               </div>
 
               {errorMsg && (
